@@ -21,13 +21,22 @@ jobs:
         pip install -r requirements.txt
     - name: Train model
       run: python train_rnn.py
+    - name: Check for changes
+      id: check_changes
+      run: |
+        git add models/
+        if git diff-index --quiet HEAD; then
+          echo "::set-output name=changes::false"
+        else
+          echo "::set-output name=changes::true"
+        fi
     - name: Commit and push changes
+      if: steps.check_changes.outputs.changes == 'true'
       env:
         PERSONAL_ACCESS_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
       run: |
         git config --global user.name "GitHub Actions"
         git config --global user.email "actions@github.com"
-        git add models/
         git commit -m "Add trained models and scalers"
-        git pull --rebase https://x-access-token:${{ secrets.PERSONAL_ACCESS_TOKEN }}@github.com/chiragpalan/stock_predictions_rnn_v2.git main
-        git push https://x-access-token:${{ secrets.PERSONAL_ACCESS_TOKEN }}@github.com/chiragpalan/stock_predictions_rnn_v2.git HEAD:main
+        git pull --rebase https://x-access-token:${{ secrets.PERSONAL_ACCESS_TOKEN }}@github.com/chiragpalan/stock_predictions_rnn_v3.git main
+        git push https://x-access-token:${{ secrets.PERSONAL_ACCESS_TOKEN }}@github.com/chiragpalan/stock_predictions_rnn_v3.git HEAD:main
