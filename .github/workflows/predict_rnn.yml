@@ -43,6 +43,6 @@ jobs:
         git add predictions/*.db
         git commit -m 'Update predictions database'
         git pull --rebase
-        git push
+        git push https://x-access-token:${{ secrets.PERSONAL_ACCESS_TOKEN }}@github.com/chiragpalan/stock_predictions_rnn_v3.git HEAD:main
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GITHUB_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
