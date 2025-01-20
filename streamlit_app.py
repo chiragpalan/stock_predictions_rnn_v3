@@ -39,7 +39,7 @@ def load_and_plot_data(selected_table):
     actual_conn.close()
     pred_conn.close()
 
-    # Convert datetime columns to datetime format
+    # Convert datetime columns to datetime format and remove timezone information
     actual_df['Datetime'] = pd.to_datetime(actual_df['Datetime'], errors='coerce').dt.tz_localize(None)
     pred_df['Datetime'] = pd.to_datetime(pred_df['Datetime'], errors='coerce').dt.tz_localize(None)
 
@@ -47,17 +47,13 @@ def load_and_plot_data(selected_table):
     actual_df = actual_df.drop_duplicates(subset=['Datetime'], keep='last')
     pred_df = pred_df.drop_duplicates(subset=['Datetime'], keep='last')
 
-    # Add helper column 'Time' for the time component from the 'Datetime' column
-    actual_df['Time'] = actual_df['Datetime'].dt.time
-    pred_df['Time'] = pred_df['Datetime'].dt.time
-
     # Filter data to only include stock market open hours
-    market_open = actual_df['Time'] >= pd.to_datetime('09:15').time()
-    market_close = actual_df['Time'] <= pd.to_datetime('15:30').time()
+    market_open = actual_df['Datetime'].dt.time >= pd.to_datetime('09:15').time()
+    market_close = actual_df['Datetime'].dt.time <= pd.to_datetime('15:30').time()
     actual_df = actual_df[market_open & market_close]
 
-    pred_open = pred_df['Time'] >= pd.to_datetime('09:15').time()
-    pred_close = pred_df['Time'] <= pd.to_datetime('15:30').time()
+    pred_open = pred_df['Datetime'].dt.time >= pd.to_datetime('09:15').time()
+    pred_close = pred_df['Datetime'].dt.time <= pd.to_datetime('15:30').time()
     pred_df = pred_df[pred_open & pred_close]
 
     # Combine actual and predicted data for x-axis range slider
