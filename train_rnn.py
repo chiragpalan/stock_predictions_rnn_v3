@@ -51,40 +51,16 @@ def create_sequences(data, input_columns, output_columns, n_steps, n_future):
 
 def train_rnn_model(X_train, y_train):
     model = Sequential([
-        # Bidirectional LSTM Layer
-        Bidirectional(LSTM(128, activation='relu', return_sequences=True), input_shape=(X_train.shape[1], X_train.shape[2])),
+        LSTM(128, activation='relu', return_sequences=True, input_shape=(X_train.shape[1], X_train.shape[2])),
         Dropout(0.2),
-        
-        # Conv1D Layer
-        Conv1D(64, kernel_size=3, activation='relu', padding='same'),
+        GRU(64, activation='relu', return_sequences=True),
         Dropout(0.2),
-        
-        # Attention Layer
-        Attention(),
-        
-        # LSTM Layer
-        LSTM(64, activation='relu', return_sequences=True),
-        Dropout(0.2),
-        
-        # GRU Layer
-        GRU(32, activation='relu', return_sequences=True),
-        Dropout(0.2),
-        
-        # Dense Layer for feature extraction
-        Dense(64, activation='relu'),
-        Dropout(0.2),
-        
-        # Final Dense Layer and Reshape to match output shape
+        GRU(32, activation='relu'),
         Dense(y_train.shape[1] * y_train.shape[2]),
         tf.keras.layers.Reshape((y_train.shape[1], y_train.shape[2]))
-    ])
-    
-    # Compile the model
+        ])
     model.compile(optimizer='adam', loss=MeanSquaredError())
-    
-    # Train the model
     model.fit(X_train, y_train, epochs=50, batch_size=32, verbose=1)
-    
     return model
 
 def main():
