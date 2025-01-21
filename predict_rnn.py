@@ -28,12 +28,9 @@ def make_predictions(model, X, scaler):
     predictions = scaler.inverse_transform(predictions.reshape(-1, predictions.shape[2])).reshape(predictions.shape)
     return predictions
 
-def generate_valid_timestamps(start_datetime, num_predictions=5):
+def generate_future_timestamps(start_datetime, num_predictions=5):
     timestamps = []
     current_datetime = start_datetime
-    if current_datetime.time() >= pd.Timestamp('15:25').time():
-        current_datetime += pd.Timedelta(days=1)
-        current_datetime = current_datetime.replace(hour=9, minute=15)
     while len(timestamps) < num_predictions:
         if current_datetime.weekday() < 5 and current_datetime.time() >= pd.Timestamp('09:15').time() and current_datetime.time() <= pd.Timestamp('15:30').time():
             timestamps.append(current_datetime)
@@ -47,9 +44,11 @@ def store_predictions(predictions, table_name, timestamps, db_name="predictions/
     conn = sqlite3.connect(db_name)
     cursor = conn.cursor()
     
-    # Ensure the number of timestamps matches the number of predictions
-    if len(timestamps) != len(predictions):
-        raise ValueError("The number of timestamps does not match the number of predictions.")
+    num_predictions = predictions.shape[0]
+    num_timestamps = len(timestamps)
+    
+    if num_timestamps != num_predictions:
+        raise ValueError(f"The number of timestamps ({num_timestamps}) does not match the number of predictions ({num_predictions}).")
     
     df_predictions = pd.DataFrame({
         'Datetime': timestamps,
@@ -104,7 +103,7 @@ def main():
             
             latest_datetime = df['Datetime'].iloc[i + 29]
             latest_datetime = latest_datetime.replace(tzinfo=None)  # Remove timezone information
-            timestamps = generate_valid_timestamps(latest_datetime, num_predictions=5)
+            timestamps = generate_future_timestamps(latest_datetime, num_predictions=5)
             
             predictions = make_predictions(model, X_batch, scaler)
             
