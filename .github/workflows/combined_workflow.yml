@@ -147,5 +147,6 @@ jobs:
             git push https://x-access-token:${{ secrets.PERSONAL_ACCESS_TOKEN }}@github.com/chiragpalan/stock_predictions_rnn_v3.git HEAD:main
           else
             echo "No predictions.db file found, skipping commit"
+          fi
         env:
           GITHUB_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
