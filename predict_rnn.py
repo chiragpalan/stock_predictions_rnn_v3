@@ -47,6 +47,10 @@ def store_predictions(predictions, table_name, timestamps, db_name="predictions/
     conn = sqlite3.connect(db_name)
     cursor = conn.cursor()
     
+    # Ensure the number of timestamps matches the number of predictions
+    if len(timestamps) != len(predictions):
+        raise ValueError("The number of timestamps does not match the number of predictions.")
+    
     df_predictions = pd.DataFrame({
         'Datetime': timestamps,
         'Predicted_Open': predictions[:, 0, 0],
