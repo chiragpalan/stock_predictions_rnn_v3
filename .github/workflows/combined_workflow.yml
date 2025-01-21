@@ -110,8 +110,9 @@ jobs:
           git config --global user.name "github-actions"
           git config --global user.email "github-actions@github.com"
           git add temp_csv/*.csv nifty50_data_v1.db
-          git commit -m "Download Nifty50 data, store to DB, and update CSVs"
-          git pull --rebase origin main || git merge --strategy-option ours origin/main
+          git commit -m "Download Nifty50 data, store to DB, and update CSVs" || exit 0
+          git pull origin main --rebase || git rebase --abort
+          git merge --strategy-option ours origin/main || git merge --abort
           git push https://x-access-token:${{ secrets.PERSONAL_ACCESS_TOKEN }}@github.com/chiragpalan/stock_predictions_rnn_v3.git HEAD:main
 
   predict_rnn:
