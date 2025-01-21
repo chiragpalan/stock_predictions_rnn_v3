@@ -83,14 +83,16 @@ def load_and_plot_data(selected_table):
         format="HH:mm"
     )
 
-    # Filter data based on the selected date and time range from the sliders
+    # Combine date and time range into a single datetime range
+    start_datetime = datetime.combine(date_range[0], time_range[0])
+    end_datetime = datetime.combine(date_range[1], time_range[1])
+
+    # Filter data based on the selected datetime range from the sliders
     filtered_actual_df = actual_df[
-        (actual_df['Datetime'].dt.date >= date_range[0]) & (actual_df['Datetime'].dt.date <= date_range[1]) &
-        (actual_df['Datetime'].dt.time >= time_range[0]) & (actual_df['Datetime'].dt.time <= time_range[1])
+        (actual_df['Datetime'] >= start_datetime) & (actual_df['Datetime'] <= end_datetime)
     ]
     filtered_pred_df = pred_df[
-        (pred_df['Datetime'].dt.date >= date_range[0]) & (pred_df['Datetime'].dt.date <= date_range[1]) &
-        (pred_df['Datetime'].dt.time >= time_range[0]) & (pred_df['Datetime'].dt.time <= time_range[1])
+        (pred_df['Datetime'] >= start_datetime) & (pred_df['Datetime'] <= end_datetime)
     ]
 
     # Plot the candlestick chart using Plotly
