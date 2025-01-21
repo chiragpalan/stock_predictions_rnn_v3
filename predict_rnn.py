@@ -5,8 +5,7 @@ import numpy as np
 from tensorflow.keras.models import load_model
 import pickle
 
-# Function to load data for prediction
-def load_data_for_prediction(table_name, conn, time_steps=30):
+def load_data_for_prediction(table_name, conn):
     df = pd.read_sql(f"SELECT * FROM {table_name};", conn)
     if 'Datetime' not in df.columns:
         raise KeyError(f"'Datetime' column not found in table {table_name}")
@@ -16,7 +15,6 @@ def load_data_for_prediction(table_name, conn, time_steps=30):
     df.sort_values('Datetime', inplace=True)
     return df
 
-# Function to preprocess data for prediction
 def preprocess_data_for_prediction(df, scaler, time_steps=30):
     input_columns = ['Open', 'High', 'Low', 'Close', 'Volume']
     df[input_columns] = scaler.transform(df[input_columns])
@@ -25,13 +23,11 @@ def preprocess_data_for_prediction(df, scaler, time_steps=30):
         X.append(df[input_columns].iloc[i:i + time_steps].values)
     return np.array(X)
 
-# Function to make predictions
 def make_predictions(model, X, scaler):
     predictions = model.predict(X)
     predictions = scaler.inverse_transform(predictions.reshape(-1, predictions.shape[2])).reshape(predictions.shape)
     return predictions
 
-# Function to generate valid stock market open timestamps
 def generate_valid_timestamps(start_datetime, num_predictions=5):
     timestamps = []
     current_datetime = start_datetime
@@ -47,14 +43,9 @@ def generate_valid_timestamps(start_datetime, num_predictions=5):
             current_datetime = current_datetime.replace(hour=9, minute=15)
     return timestamps
 
-# Function to store predictions
-def store_predictions(predictions, table_name, timestamps, db_name="predictions.db"):
+def store_predictions(predictions, table_name, timestamps, db_name="predictions/predictions.db"):
     conn = sqlite3.connect(db_name)
     cursor = conn.cursor()
-    
-    # Check if the table already exists
-    cursor.execute(f"SELECT name FROM sqlite_master WHERE type='table' AND name='{table_name}';")
-    table_exists = cursor.fetchone() is not None
     
     df_predictions = pd.DataFrame({
         'Datetime': timestamps,
@@ -65,12 +56,7 @@ def store_predictions(predictions, table_name, timestamps, db_name="predictions.
         'Predicted_Volume': predictions[:, 0, 4],
     })
     
-    if table_exists:
-        # Append the new predictions to the existing table
-        df_predictions.to_sql(table_name, conn, if_exists='append', index=False)
-    else:
-        # Create a new table if it does not exist
-        df_predictions.to_sql(table_name, conn, if_exists='replace', index=False)
+    df_predictions.to_sql(table_name, conn, if_exists='append', index=False)
     
     conn.close()
 
@@ -106,16 +92,19 @@ def main():
         
         X = preprocess_data_for_prediction(df, scaler)
         
-        # Select the last 150 instances for prediction
-        X_last_150 = X[-30:]
-        
-        latest_datetime = df['Datetime'].iloc[-1]
-        latest_datetime = latest_datetime.replace(tzinfo=None)  # Remove timezone information
-        timestamps = generate_valid_timestamps(latest_datetime, num_predictions=30)
-        
-        predictions = make_predictions(model, X_last_150, scaler)
-        
-        store_predictions(predictions, f"{table_name}_predictions", timestamps, predictions_db)
+        for i in range(0, len(X), 30):
+            X_batch = X[i:i + 30]
+            
+            if len(X_batch) < 30:
+                continue
+            
+            latest_datetime = df['Datetime'].iloc[i + 29]
+            latest_datetime = latest_datetime.replace(tzinfo=None)  # Remove timezone information
+            timestamps = generate_valid_timestamps(latest_datetime, num_predictions=5)
+            
+            predictions = make_predictions(model, X_batch, scaler)
+            
+            store_predictions(predictions, f"{table_name}_predictions", timestamps, predictions_db)
     
     conn.close()
 
