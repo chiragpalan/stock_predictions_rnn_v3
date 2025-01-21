@@ -111,7 +111,7 @@ jobs:
           git config --global user.email "github-actions@github.com"
           git add temp_csv/*.csv nifty50_data_v1.db
           git commit -m "Download Nifty50 data, store to DB, and update CSVs"
-          git pull --rebase origin main
+          git pull --rebase origin main || git merge --strategy-option ours origin/main
           git push https://x-access-token:${{ secrets.PERSONAL_ACCESS_TOKEN }}@github.com/chiragpalan/stock_predictions_rnn_v3.git HEAD:main
 
   predict_rnn:
@@ -141,7 +141,7 @@ jobs:
             echo "Prediction database found."
             git config --global user.name "GitHub Actions"
             git config --global user.email "github-actions@github.com"
-            git pull origin main
+            git pull origin main || git merge --strategy-option ours origin/main
             git add predictions/predictions.db
             git commit -m "Update prediction database"
             git push https://x-access-token:${{ secrets.PERSONAL_ACCESS_TOKEN }}@github.com/chiragpalan/stock_predictions_rnn_v3.git HEAD:main
