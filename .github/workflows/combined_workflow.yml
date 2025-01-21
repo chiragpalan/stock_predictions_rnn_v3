@@ -142,7 +142,9 @@ jobs:
             echo "Prediction database found."
             git config --global user.name "GitHub Actions"
             git config --global user.email "github-actions@github.com"
+            git stash
             git pull origin main || git merge --strategy-option ours origin/main
+            git stash pop
             git add predictions/predictions.db
             git commit -m "Update prediction database"
             git push https://x-access-token:${{ secrets.PERSONAL_ACCESS_TOKEN }}@github.com/chiragpalan/stock_predictions_rnn_v3.git HEAD:main
