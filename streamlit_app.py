@@ -2,7 +2,7 @@ import sqlite3
 import pandas as pd
 import streamlit as st
 import plotly.graph_objects as go
-from datetime import datetime
+from datetime import datetime, time
 
 # Set page configuration for a better layout
 st.set_page_config(layout="wide")
@@ -61,21 +61,37 @@ def load_and_plot_data(selected_table):
     combined_df.sort_values(by='Datetime', inplace=True)
 
     # Convert Timestamps to datetime objects for Streamlit slider
-    min_datetime = combined_df['Datetime'].min().to_pydatetime()
-    max_datetime = combined_df['Datetime'].max().to_pydatetime()
+    min_date = combined_df['Datetime'].dt.date.min()
+    max_date = combined_df['Datetime'].dt.date.max()
+    min_time = time(9, 15)
+    max_time = time(15, 30)
 
-    # Streamlit slider for x-axis date and time range selection
-    datetime_range = st.slider(
-        "Select Date and Time Range",
-        min_value=min_datetime,
-        max_value=max_datetime,
-        value=(min_datetime, max_datetime),
-        format="YYYY-MM-DD HH:mm"
+    # Streamlit sliders for date and time range selection
+    date_range = st.slider(
+        "Select Date Range",
+        min_value=min_date,
+        max_value=max_date,
+        value=(min_date, max_date),
+        format="YYYY-MM-DD"
     )
 
-    # Filter data based on the selected datetime range from the slider
-    filtered_actual_df = actual_df[(actual_df['Datetime'] >= datetime_range[0]) & (actual_df['Datetime'] <= datetime_range[1])]
-    filtered_pred_df = pred_df[(pred_df['Datetime'] >= datetime_range[0]) & (pred_df['Datetime'] <= datetime_range[1])]
+    time_range = st.slider(
+        "Select Time Range",
+        min_value=min_time,
+        max_value=max_time,
+        value=(min_time, max_time),
+        format="HH:mm"
+    )
+
+    # Filter data based on the selected date and time range from the sliders
+    filtered_actual_df = actual_df[
+        (actual_df['Datetime'].dt.date >= date_range[0]) & (actual_df['Datetime'].dt.date <= date_range[1]) &
+        (actual_df['Datetime'].dt.time >= time_range[0]) & (actual_df['Datetime'].dt.time <= time_range[1])
+    ]
+    filtered_pred_df = pred_df[
+        (pred_df['Datetime'].dt.date >= date_range[0]) & (pred_df['Datetime'].dt.date <= date_range[1]) &
+        (pred_df['Datetime'].dt.time >= time_range[0]) & (pred_df['Datetime'].dt.time <= time_range[1])
+    ]
 
     # Plot the candlestick chart using Plotly
     fig = go.Figure()
