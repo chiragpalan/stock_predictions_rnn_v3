@@ -110,6 +110,7 @@ def main():
             latest_datetime = df['Datetime'].iloc[i + 29]
             latest_datetime = latest_datetime.replace(tzinfo=None)  # Remove timezone information
             timestamps = generate_future_timestamps(latest_datetime, num_predictions=5)
+            print(timestamps)
             
             predictions = make_predictions(model, X_batch, scaler, num_predictions=5)
             print(predictions)
