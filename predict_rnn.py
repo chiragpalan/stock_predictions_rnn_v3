@@ -97,6 +97,7 @@ def main():
         
         # Keep only the last 300 deduplicated data points
         df = df.tail(300)
+        print(df.tail(50))
         
         X = preprocess_data_for_prediction(df, scaler)
         
