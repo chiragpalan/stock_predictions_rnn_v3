@@ -95,26 +95,24 @@ def main():
         with open(scaler_path, 'rb') as f:
             scaler = pickle.load(f)
         
+        # Keep only the last 300 deduplicated data points
+        df = df.tail(300)
+        
         X = preprocess_data_for_prediction(df, scaler)
         
-        max_datetime = df['Datetime'].max()
-        while True:
-            for i in range(0, len(X), 30):
-                X_batch = X[i:i + 30]
-                
-                if len(X_batch) < 30:
-                    continue
-                
-                latest_datetime = df['Datetime'].iloc[i + 29]
-                latest_datetime = latest_datetime.replace(tzinfo=None)  # Remove timezone information
-                timestamps = generate_future_timestamps(latest_datetime, num_predictions=5)
-                
-                predictions = make_predictions(model, X_batch, scaler, num_predictions=5)
-                
-                store_predictions(predictions, f"{table_name}_predictions", timestamps, predictions_db)
-                
-                if latest_datetime >= max_datetime:
-                    break
+        for i in range(0, len(X), 30):
+            X_batch = X[i:i + 30]
+            
+            if len(X_batch) < 30:
+                continue
+            
+            latest_datetime = df['Datetime'].iloc[i + 29]
+            latest_datetime = latest_datetime.replace(tzinfo=None)  # Remove timezone information
+            timestamps = generate_future_timestamps(latest_datetime, num_predictions=5)
+            
+            predictions = make_predictions(model, X_batch, scaler, num_predictions=5)
+            
+            store_predictions(predictions, f"{table_name}_predictions", timestamps, predictions_db)
     
     conn.close()
 
