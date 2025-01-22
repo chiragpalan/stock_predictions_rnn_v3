@@ -14,19 +14,18 @@ def load_data_for_prediction(table_name, conn):
     df.dropna(subset=['Datetime'], inplace=True)
     df.drop_duplicates(subset=['Datetime'], inplace=True)
     df.sort_values('Datetime', inplace=True)
-    return df
+    return df.tail(300)
 
 def preprocess_data_for_prediction(df, scaler, time_steps=30):
     input_columns = ['Open', 'High', 'Low', 'Close', 'Volume']
     df[input_columns] = scaler.transform(df[input_columns])
     X = []
-    for i in range(len(df) - time_steps):
+    for i in range(len(df) - time_steps + 1):
         X.append(df[input_columns].iloc[i:i + time_steps].values)
     return np.array(X)
 
-def make_predictions(model, X, scaler, num_predictions=5):
+def make_predictions(model, X, scaler):
     predictions = model.predict(X)
-    predictions = predictions[:num_predictions]  # Adjust to get only the required number of predictions
     predictions = scaler.inverse_transform(predictions.reshape(-1, predictions.shape[2])).reshape(predictions.shape)
     return predictions
 
@@ -95,13 +94,9 @@ def main():
         with open(scaler_path, 'rb') as f:
             scaler = pickle.load(f)
         
-        # Keep only the last 300 deduplicated data points
-        df = df.tail(300)
-        print(df.tail(50))
-        
         X = preprocess_data_for_prediction(df, scaler)
         
-        for i in range(0, len(X), 30):
+        for i in range(0, len(X) - 30, 5):  # Sliding window with step size of 5
             X_batch = X[i:i + 30]
             
             if len(X_batch) < 30:
@@ -110,10 +105,8 @@ def main():
             latest_datetime = df['Datetime'].iloc[i + 29]
             latest_datetime = latest_datetime.replace(tzinfo=None)  # Remove timezone information
             timestamps = generate_future_timestamps(latest_datetime, num_predictions=5)
-            print(timestamps)
             
-            predictions = make_predictions(model, X_batch, scaler, num_predictions=5)
-            print(predictions)
+            predictions = make_predictions(model, X_batch, scaler)
             store_predictions(predictions, f"{table_name}_predictions", timestamps, predictions_db)
     
     conn.close()
