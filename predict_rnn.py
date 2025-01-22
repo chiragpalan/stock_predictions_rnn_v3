@@ -34,7 +34,7 @@ def generate_future_timestamps(start_datetime, num_predictions=5):
     timestamps = []
     current_datetime = start_datetime + pd.Timedelta(minutes=5)
     while len(timestamps) < num_predictions:
-        if current_datetime.weekday() < 5 and pd.Timestamp('09:15') <= current_datetime.time() <= pd.Timestamp('15:30'):
+        if current_datetime.weekday() < 5 and pd.Timestamp('09:15').time() <= current_datetime.time() <= pd.Timestamp('15:30').time():
             timestamps.append(current_datetime)
         current_datetime += pd.Timedelta(minutes=5)
         if current_datetime.time() > pd.Timestamp('15:30').time():
