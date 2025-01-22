@@ -112,7 +112,7 @@ def main():
             timestamps = generate_future_timestamps(latest_datetime, num_predictions=5)
             
             predictions = make_predictions(model, X_batch, scaler, num_predictions=5)
-            
+            print(predictions)
             store_predictions(predictions, f"{table_name}_predictions", timestamps, predictions_db)
     
     conn.close()
