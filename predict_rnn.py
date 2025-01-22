@@ -10,6 +10,7 @@ def load_data_for_prediction(table_name, conn):
     if 'Datetime' not in df.columns:
         raise KeyError(f"'Datetime' column not found in table {table_name}")
     df['Datetime'] = pd.to_datetime(df['Datetime'], errors='coerce')
+    df['Datetime'] = df['Datetime'].dt.tz_localize(None)  # Remove timezone information
     df.dropna(subset=['Datetime'], inplace=True)
     df.drop_duplicates(subset=['Datetime'], inplace=True)
     df.sort_values('Datetime', inplace=True)
