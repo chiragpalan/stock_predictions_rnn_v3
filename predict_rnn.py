@@ -24,10 +24,10 @@ def preprocess_data_for_prediction(df, scaler, time_steps=30):
         X.append(df[input_columns].iloc[i:i + time_steps].values)
     return np.array(X)
 
-def make_predictions(model, X, scaler):
+def make_predictions(model, X, scaler, num_predictions=5):
     predictions = model.predict(X)
     predictions = scaler.inverse_transform(predictions.reshape(-1, predictions.shape[2])).reshape(predictions.shape)
-    return predictions
+    return predictions[:num_predictions]
 
 def generate_future_timestamps(start_datetime, num_predictions=5):
     timestamps = []
@@ -106,7 +106,7 @@ def main():
             latest_datetime = latest_datetime.replace(tzinfo=None)  # Remove timezone information
             timestamps = generate_future_timestamps(latest_datetime, num_predictions=5)
             
-            predictions = make_predictions(model, X_batch, scaler)
+            predictions = make_predictions(model, X_batch, scaler, num_predictions=5)
             store_predictions(predictions, f"{table_name}_predictions", timestamps, predictions_db)
     
     conn.close()
